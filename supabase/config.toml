@@ -1,0 +1,6 @@
+# Local: PostgREST exposed schemas (match hosted Dashboard → API → Exposed schemas).
+# App data + RPCs: fundraiser_app. Platform: public, storage, auth (not in this file).
+
+[api]
+schemas = ["public", "fundraiser_app", "graphql_public"]
+extra_search_path = ["public", "fundraiser_app", "extensions"]
