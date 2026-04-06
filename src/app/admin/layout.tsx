@@ -23,7 +23,7 @@ export default async function AdminLayout({
               href="/admin/fundraisers"
               className="font-medium text-zinc-900 dark:text-zinc-100"
             >
-              Fundraisers
+              큰빛 다운타운 선교 펀드레이징
             </Link>
           </nav>
           <div className="flex items-center gap-3">
