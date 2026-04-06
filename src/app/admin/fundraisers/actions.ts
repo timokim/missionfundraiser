@@ -132,7 +132,7 @@ export async function addFormField(fundraiserId: string) {
     .maybeSingle();
   const nextOrder = (max?.sort_order ?? -1) + 1;
   const label = "New question";
-  let key = slugKey(label);
+  const key = slugKey(label);
   const { data: existing } = await db(supabase)
     .from("fundraiser_form_fields")
     .select("key")
