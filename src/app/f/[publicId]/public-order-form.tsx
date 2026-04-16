@@ -50,7 +50,9 @@ export function PublicOrderForm({ bundle }: { bundle: PublishedFundraiserBundle 
             <img
               src={f.hero_image_url}
               alt=""
-              className="aspect-[21/9] w-full rounded-2xl object-cover"
+              // original class that restricted the image size
+              // className="aspect-[21/9] w-full rounded-2xl object-cover"
+              className="w-full h-auto rounded-2xl"
             />
             // TODO: make the hero image show the full thing
           )}
@@ -154,7 +156,9 @@ export function PublicOrderForm({ bundle }: { bundle: PublishedFundraiserBundle 
           <img
             src={f.hero_image_url}
             alt=""
-            className="aspect-[21/9] w-full rounded-2xl object-cover"
+            // original class that restricted the image size
+            // className="aspect-[21/9] w-full rounded-2xl object-cover"
+            className="w-full h-auto rounded-2xl"
           />
         )}
         <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
