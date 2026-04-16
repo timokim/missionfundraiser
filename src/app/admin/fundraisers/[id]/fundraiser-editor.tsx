@@ -64,6 +64,7 @@ export function FundraiserEditor({
   const [msg, setMsg] = useState<string | null>(null);
   const [title, setTitle] = useState(initial.title);
   const [description, setDescription] = useState(initial.description ?? "");
+  const [eTransferEmail, setETransferEmail] = useState(initial.e_transfer_email ?? "");
   const [status, setStatus] = useState(initial.status);
   const [closedMessage, setClosedMessage] = useState(
     initial.closed_message ?? ""
@@ -197,6 +198,23 @@ export function FundraiserEditor({
                 if (description !== (initial.description ?? "")) {
                   runAction(() =>
                     updateFundraiser(initial.id, { description })
+                  );
+                }
+              }}
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+              E-transfer email
+            </label>
+            <input
+              className="mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 outline-none focus:ring-2 focus:ring-zinc-400 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
+              value={eTransferEmail}
+              onChange={(e) => setETransferEmail(e.target.value)}
+              onBlur={() => {
+                if (eTransferEmail !== initial.e_transfer_email) {
+                  runAction(() => 
+                    updateFundraiser(initial.id, { e_transfer_email: eTransferEmail })
                   );
                 }
               }}

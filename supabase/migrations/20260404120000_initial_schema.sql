@@ -17,6 +17,7 @@ create table public.fundraisers (
   status text not null,
   hero_image_url text,
   description text default '',
+  e_transfer_email text default '',
   closed_message text not null default '',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
@@ -258,7 +259,7 @@ declare
   fr record;
   result jsonb;
 begin
-  select id, title, public_id, hero_image_url, description, status, closed_message
+  select id, title, public_id, hero_image_url, description, status, closed_message, e_transfer_email
   into fr
   from public.fundraisers
   where public_id = p_public_id and status in ('published', 'closed');
@@ -275,7 +276,8 @@ begin
         'title', fr.title,
         'public_id', fr.public_id,
         'hero_image_url', fr.hero_image_url,
-        'description', coalesce(fr.description, '')
+        'description', coalesce(fr.description, ''),
+        'e_transfer_email', fr.e_transfer_email
       ),
       'closed_message', coalesce(fr.closed_message, ''),
       'items', '[]'::jsonb,
@@ -298,7 +300,8 @@ begin
       'title', fr.title,
       'public_id', fr.public_id,
       'hero_image_url', fr.hero_image_url,
-      'description', coalesce(fr.description, '')
+      'description', coalesce(fr.description, ''),
+      'e_transfer_email', fr.e_transfer_email
     ),
     'items', coalesce((
       select jsonb_agg(

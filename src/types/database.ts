@@ -12,6 +12,7 @@ export interface Fundraiser {
   status: FundraiserStatus;
   hero_image_url: string | null;
   description: string | null;
+  e_transfer_email: string | null;
   closed_message: string;
   created_at: string;
   updated_at: string;
@@ -93,6 +94,7 @@ export interface PublishedFundraiserBundle {
     id: string;
     title: string;
     public_id: string;
+    e_transfer_email: string | null;
     hero_image_url: string | null;
     description: string;
   };

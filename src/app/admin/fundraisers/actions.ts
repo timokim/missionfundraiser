@@ -45,6 +45,7 @@ export async function updateFundraiser(
   patch: {
     title?: string;
     description?: string | null;
+    e_transfer_email?: string | null;
     status?: "draft" | "published" | "closed";
     closed_message?: string;
     hero_image_url?: string | null;

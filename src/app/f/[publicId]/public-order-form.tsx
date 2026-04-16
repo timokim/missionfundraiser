@@ -326,7 +326,7 @@ export function PublicOrderForm({ bundle }: { bundle: PublishedFundraiserBundle 
       {hasAnyPricedItem && (
         <div className="flex items-center justify-between rounded-2xl border border-zinc-200 bg-white px-4 py-4 dark:border-zinc-800 dark:bg-zinc-900">
           <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            Estimated total: abc@gmail.com으로 e-transfer 부탁드립니다!
+            <b>{f.e_transfer_email ? `${f.e_transfer_email}` : ""}</b>으로 e-transfer 부탁드립니다!
           </span>
           <span className="text-lg font-semibold tabular-nums text-zinc-900 dark:text-zinc-50">
             {formatMoney(totalCents)}
