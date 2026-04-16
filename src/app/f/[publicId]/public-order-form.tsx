@@ -52,6 +52,7 @@ export function PublicOrderForm({ bundle }: { bundle: PublishedFundraiserBundle 
               alt=""
               className="aspect-[21/9] w-full rounded-2xl object-cover"
             />
+            // TODO: make the hero image show the full thing
           )}
           <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
             {f.title}

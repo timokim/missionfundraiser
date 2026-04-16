@@ -122,6 +122,17 @@ export async function moveItem(
   revalidatePath(`/admin/fundraisers/${fundraiserId}`);
 }
 
+export async function deleteItem(id: string, fundraiserId: string) {
+  const supabase = await createClient();
+  const { error } = await db(supabase)
+    .from("fundraiser_items")
+    .delete()
+    .eq("id", id);
+  if (error) throw error;
+  revalidatePath(`/admin/fundraisers/${fundraiserId}`);
+}
+
+
 export async function addFormField(fundraiserId: string) {
   const supabase = await createClient();
   const { data: max } = await db(supabase)

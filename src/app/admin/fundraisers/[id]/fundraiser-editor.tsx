@@ -16,6 +16,7 @@ import {
   addItem,
   deleteFormField,
   moveItem,
+  deleteItem,
   updateFormField,
   updateFundraiser,
   updateItem,
@@ -494,6 +495,18 @@ export function FundraiserEditor({
                       e.target.value = "";
                     }}
                   />
+                </div>
+                <div className="sm:col-span-2">
+                  <button
+                    type="button"
+                    className="text-xs text-red-600"
+                    disabled={pending}
+                    onClick={() =>
+                      runAction(() => deleteItem(item.id, initial.id))
+                    }
+                  >
+                    Remove Menu Item
+                  </button>
                 </div>
               </div>
             </li>
