@@ -190,14 +190,6 @@ export function PublicOrderForm({ bundle }: { bundle: PublishedFundraiserBundle 
                 }`}
               >
                 <div className="flex gap-3">
-                  {item.image_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={item.image_url}
-                      alt=""
-                      className="h-20 w-20 shrink-0 rounded-lg object-cover"
-                    />
-                  ) : null}
                   <div className="min-w-0 flex-1">
                     <h3 className="font-medium text-zinc-900 dark:text-zinc-100">
                       {item.name}
@@ -227,6 +219,14 @@ export function PublicOrderForm({ bundle }: { bundle: PublishedFundraiserBundle 
                       </p>
                     )}
                   </div>
+                  {item.image_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={item.image_url}
+                      alt=""
+                      className="h-40 w-40 shrink-0 rounded-lg object-contain"
+                    />
+                  ) : null}
                 </div>
                 {!soldOut && (
                   <div className="mt-4 flex items-center gap-3">
