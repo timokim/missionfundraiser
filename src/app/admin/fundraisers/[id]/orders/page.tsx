@@ -1,10 +1,8 @@
 import { db } from "@/lib/supabase/fundraiser-schema";
+import { OrdersReport } from "@/components/orders/orders-report";
+import type { OrderRow } from "@/lib/orders/report";
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
-import {
-  OrdersSpreadsheet,
-  type OrderRow,
-} from "./orders-spreadsheet";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +16,7 @@ export default async function FundraiserOrdersPage({
 
   const { data: fundraiser, error: fe } = await db(supabase)
     .from("fundraisers")
-    .select("id, title")
+    .select("id, title, public_id")
     .eq("id", id)
     .single();
 
@@ -32,7 +30,7 @@ export default async function FundraiserOrdersPage({
 
   const { data: items } = await db(supabase)
     .from("fundraiser_items")
-    .select("id, name, sort_order")
+    .select("id, name, sort_order, unit_price_cents")
     .eq("fundraiser_id", id)
     .order("sort_order", { ascending: true });
 
@@ -60,7 +58,11 @@ export default async function FundraiserOrdersPage({
   }
 
   const fieldKeys = fields?.map((f) => f.key) ?? [];
-  const itemColumns = (items ?? []).map((i) => ({ id: i.id, name: i.name }));
+  const itemColumns = (items ?? []).map((i) => ({
+    id: i.id,
+    name: i.name,
+    unit_price_cents: i.unit_price_cents,
+  }));
 
   const rows: OrderRow[] = (orders ?? []).map((o) => ({
     id: o.id,
@@ -74,12 +76,17 @@ export default async function FundraiserOrdersPage({
   }));
 
   return (
-    <OrdersSpreadsheet
+    <OrdersReport
       fundraiserId={fundraiser.id}
       fundraiserTitle={fundraiser.title}
+      fundraiserPublicId={fundraiser.public_id}
       itemColumns={itemColumns}
       fieldKeys={fieldKeys}
       rows={rows}
+      backHref={`/admin/fundraisers/${fundraiser.id}`}
+      backLabel="← Back to editor"
+      orderDetailBasePath={`/admin/fundraisers/${fundraiser.id}/orders`}
+      shareable
     />
   );
 }
