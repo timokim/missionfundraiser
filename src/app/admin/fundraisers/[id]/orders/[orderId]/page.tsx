@@ -2,6 +2,7 @@ import { db } from "@/lib/supabase/fundraiser-schema";
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { OrderDetailActions } from "../order-detail-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +24,7 @@ export default async function OrderDetailPage({
 
   const { data: order, error: oe } = await db(supabase)
     .from("orders")
-    .select("id, created_at, responses, fundraiser_id, total_cents")
+    .select("id, created_at, responses, fundraiser_id, total_cents, paid")
     .eq("id", orderId)
     .single();
 
@@ -47,6 +48,7 @@ export default async function OrderDetailPage({
 
   const responses = (order.responses as Record<string, string>) ?? {};
   const totalCents = (order as { total_cents?: number | null }).total_cents;
+  const paid = Boolean((order as { paid?: boolean | null }).paid);
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -64,6 +66,12 @@ export default async function OrderDetailPage({
           {fundraiser.title}
         </p>
       </div>
+
+      <OrderDetailActions
+        fundraiserId={fundraiserId}
+        orderId={orderId}
+        initialPaid={paid}
+      />
 
       <section className="rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">
@@ -93,6 +101,12 @@ export default async function OrderDetailPage({
               </dd>
             </div>
           )}
+          <div className="flex gap-2">
+            <dt className="w-28 shrink-0 text-zinc-500">Paid</dt>
+            <dd className="text-zinc-800 dark:text-zinc-200">
+              {paid ? "Yes" : "No"}
+            </dd>
+          </div>
         </dl>
       </section>
 

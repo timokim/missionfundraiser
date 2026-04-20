@@ -54,6 +54,7 @@ export interface Order {
   responses: Record<string, string>;
   idempotency_key: string | null;
   total_cents: number | null;
+  paid: boolean;
   created_at: string;
 }
 

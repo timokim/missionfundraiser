@@ -198,3 +198,52 @@ export async function deleteFormField(id: string, fundraiserId: string) {
   if (error) throw error;
   revalidatePath(`/admin/fundraisers/${fundraiserId}`);
 }
+
+export async function setOrderPaid(
+  fundraiserId: string,
+  orderId: string,
+  paid: boolean
+) {
+  const supabase = await createClient();
+  const { error } = await db(supabase)
+    .from("orders")
+    .update({ paid })
+    .eq("id", orderId)
+    .eq("fundraiser_id", fundraiserId);
+  if (error) throw error;
+  revalidatePath(`/admin/fundraisers/${fundraiserId}/orders`);
+  revalidatePath(`/admin/fundraisers/${fundraiserId}/orders/${orderId}`);
+
+  const { data: fundraiser } = await db(supabase)
+    .from("fundraisers")
+    .select("public_id")
+    .eq("id", fundraiserId)
+    .maybeSingle();
+  if (fundraiser?.public_id) {
+    revalidatePath(`/f/${fundraiser.public_id}/orders`);
+  }
+}
+
+export async function deleteOrder(fundraiserId: string, orderId: string) {
+  const supabase = await createClient();
+
+  const { data: fundraiser } = await db(supabase)
+    .from("fundraisers")
+    .select("public_id")
+    .eq("id", fundraiserId)
+    .single();
+
+  const { error } = await db(supabase)
+    .from("orders")
+    .delete()
+    .eq("id", orderId)
+    .eq("fundraiser_id", fundraiserId);
+  if (error) throw error;
+
+  revalidatePath(`/admin/fundraisers/${fundraiserId}/orders`);
+  revalidatePath(`/admin/fundraisers/${fundraiserId}`);
+  if (fundraiser?.public_id) {
+    revalidatePath(`/f/${fundraiser.public_id}/orders`);
+  }
+  redirect(`/admin/fundraisers/${fundraiserId}/orders`);
+}

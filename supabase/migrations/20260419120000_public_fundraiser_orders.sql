@@ -53,6 +53,7 @@ begin
           'id', o.id,
           'created_at', o.created_at,
           'total_cents', o.total_cents,
+          'paid', o.paid,
           'responses', coalesce(o.responses, '{}'::jsonb),
           'line_qty', coalesce((
             select jsonb_object_agg(oli.item_id::text, oli.quantity)

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import type { OrderItemColumn, OrderRow } from "@/lib/orders/report";
+import { PaidCell } from "./paid-cell";
 
 function formatTotal(cents: number | null) {
   if (cents == null) return "";
@@ -35,6 +36,7 @@ export function OrdersReport({
   backLabel,
   orderDetailBasePath,
   shareable,
+  editablePaid,
 }: {
   fundraiserId: string;
   fundraiserTitle: string;
@@ -46,6 +48,7 @@ export function OrdersReport({
   backLabel?: string;
   orderDetailBasePath?: string;
   shareable?: boolean;
+  editablePaid?: boolean;
 }) {
   const [selectedItemId, setSelectedItemId] = useState("");
   const [selectedServiceNo, setSelectedServiceNo] = useState("");
@@ -236,6 +239,9 @@ export function OrdersReport({
                 Order
               </th>
               <th className="whitespace-nowrap px-3 py-2 font-medium text-zinc-700 dark:text-zinc-300">
+                Paid
+              </th>
+              <th className="whitespace-nowrap px-3 py-2 font-medium text-zinc-700 dark:text-zinc-300">
                 Total (CAD)
               </th>
               {fieldKeys.map((key) => (
@@ -260,7 +266,7 @@ export function OrdersReport({
             {filteredRows.length === 0 ? (
               <tr>
                 <td
-                  colSpan={3 + fieldKeys.length + visibleItemColumns.length}
+                  colSpan={4 + fieldKeys.length + visibleItemColumns.length}
                   className="px-3 py-8 text-center text-zinc-500"
                 >
                   No matching orders.
@@ -288,6 +294,14 @@ export function OrdersReport({
                         {row.id.slice(0, 8)}…
                       </span>
                     )}
+                  </td>
+                  <td className="whitespace-nowrap px-3 py-2 text-zinc-800 dark:text-zinc-200">
+                    <PaidCell
+                      fundraiserId={fundraiserId}
+                      orderId={row.id}
+                      initialPaid={row.paid}
+                      editable={Boolean(editablePaid)}
+                    />
                   </td>
                   <td className="whitespace-nowrap px-3 py-2 font-medium tabular-nums text-zinc-800 dark:text-zinc-200">
                     {row.total_cents != null ? `$${formatTotal(row.total_cents)}` : "—"}

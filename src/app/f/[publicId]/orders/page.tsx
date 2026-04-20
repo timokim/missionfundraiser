@@ -37,6 +37,7 @@ export default async function PublicFundraiserOrdersPage({
           rows={report.rows}
           backHref={`/f/${report.fundraiserPublicId}`}
           backLabel="← Back to fundraiser"
+          editablePaid={false}
         />
       </div>
     </main>

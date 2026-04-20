@@ -24,7 +24,7 @@ export default async function FundraiserOrdersPage({
 
   const { data: orders } = await db(supabase)
     .from("orders")
-    .select("id, created_at, responses, total_cents")
+    .select("id, created_at, responses, total_cents, paid")
     .eq("fundraiser_id", id)
     .order("created_at", { ascending: false });
 
@@ -68,6 +68,7 @@ export default async function FundraiserOrdersPage({
     id: o.id,
     created_at: o.created_at,
     total_cents: (o as { total_cents?: number | null }).total_cents ?? null,
+    paid: Boolean((o as { paid?: boolean | null }).paid),
     responses: (o.responses as Record<string, string>) ?? {},
     lineQty: Object.fromEntries(lineByOrder.get(o.id) ?? []) as Record<
       string,
@@ -87,6 +88,7 @@ export default async function FundraiserOrdersPage({
       backLabel="← Back to editor"
       orderDetailBasePath={`/admin/fundraisers/${fundraiser.id}/orders`}
       shareable
+      editablePaid
     />
   );
 }

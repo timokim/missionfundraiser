@@ -2,6 +2,7 @@ export type OrderRow = {
   id: string;
   created_at: string;
   total_cents: number | null;
+  paid: boolean;
   responses: Record<string, string>;
   lineQty: Record<string, number>;
 };
@@ -37,6 +38,7 @@ type RawPublicOrderReport = {
     id?: string;
     created_at?: string;
     total_cents?: number | null;
+    paid?: boolean | null;
     responses?: Record<string, string> | null;
     line_qty?: Record<string, number> | null;
   }>;
@@ -81,6 +83,7 @@ export function parsePublicOrderReport(data: unknown): OrderReportData | null {
           id: string;
           created_at: string;
           total_cents?: number | null;
+          paid?: boolean | null;
           responses?: Record<string, string> | null;
           line_qty?: Record<string, number> | null;
         } => typeof row.id === "string" && typeof row.created_at === "string"
@@ -89,6 +92,7 @@ export function parsePublicOrderReport(data: unknown): OrderReportData | null {
         id: row.id,
         created_at: row.created_at,
         total_cents: typeof row.total_cents === "number" ? row.total_cents : null,
+        paid: Boolean(row.paid),
         responses: row.responses ?? {},
         lineQty: row.line_qty ?? {},
       })),
