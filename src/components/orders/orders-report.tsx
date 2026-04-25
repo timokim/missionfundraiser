@@ -5,6 +5,15 @@ import { useMemo, useState } from "react";
 import type { OrderItemColumn, OrderRow } from "@/lib/orders/report";
 import { PaidCell } from "./paid-cell";
 
+type SortKey =
+  | "submitted"
+  | "order"
+  | "paid"
+  | "total"
+  | "ordered_items"
+  | `field:${string}`
+  | `item:${string}`;
+
 function formatTotal(cents: number | null) {
   if (cents == null) return "";
   return (cents / 100).toFixed(2);
@@ -67,6 +76,8 @@ export function OrdersReport({
   const [selectedItemId, setSelectedItemId] = useState("");
   const [selectedServiceNo, setSelectedServiceNo] = useState("");
   const [shareMessage, setShareMessage] = useState<string | null>(null);
+  const [sortKey, setSortKey] = useState<SortKey>("submitted");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
   const serviceNoOptions = useMemo(() => {
     return Array.from(
@@ -93,9 +104,45 @@ export function OrdersReport({
     return itemColumns.filter((item) => item.id === selectedItemId);
   }, [itemColumns, selectedItemId]);
 
+  const sortedRows = useMemo(() => {
+    const collator = new Intl.Collator(undefined, {
+      numeric: true,
+      sensitivity: "base",
+    });
+
+    const valueForSort = (row: OrderRow, key: SortKey) => {
+      if (key === "submitted") return new Date(row.created_at).getTime();
+      if (key === "order") return row.id;
+      if (key === "paid") return row.paid ? 1 : 0;
+      if (key === "total") return row.total_cents ?? 0;
+      if (key === "ordered_items") return formatOrderedItems(row, itemColumns);
+      if (key.startsWith("field:")) return row.responses[key.slice(6)] ?? "";
+      if (key.startsWith("item:")) return Number(row.lineQty[key.slice(5)] ?? 0);
+      return "";
+    };
+
+    return [...filteredRows].sort((a, b) => {
+      const aValue = valueForSort(a, sortKey);
+      const bValue = valueForSort(b, sortKey);
+      let result = 0;
+
+      if (typeof aValue === "number" && typeof bValue === "number") {
+        result = aValue - bValue;
+      } else {
+        result = collator.compare(String(aValue), String(bValue));
+      }
+
+      if (result === 0) {
+        result = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      }
+
+      return sortDirection === "asc" ? result : -result;
+    });
+  }, [filteredRows, itemColumns, sortDirection, sortKey]);
+
   const summaryRows = useMemo(() => {
     return visibleItemColumns.map((item) => {
-      const quantity = filteredRows.reduce(
+      const quantity = sortedRows.reduce(
         (sum, row) => sum + Number(row.lineQty[item.id] ?? 0),
         0
       );
@@ -107,7 +154,7 @@ export function OrdersReport({
         revenue,
       };
     });
-  }, [filteredRows, visibleItemColumns]);
+  }, [sortedRows, visibleItemColumns]);
 
   const summaryTotalRevenue = useMemo(() => {
     return summaryRows.reduce((sum, row) => sum + row.revenue, 0);
@@ -127,7 +174,7 @@ export function OrdersReport({
       return value;
     };
     const lines = [headers.map(escape).join(",")];
-    for (const row of filteredRows) {
+    for (const row of sortedRows) {
       const values = [
         row.created_at,
         row.id,
@@ -139,7 +186,21 @@ export function OrdersReport({
       lines.push(values.map(escape).join(","));
     }
     return lines.join("\n");
-  }, [fieldKeys, filteredRows, itemColumns, visibleItemColumns]);
+  }, [fieldKeys, itemColumns, sortedRows, visibleItemColumns]);
+
+  function toggleSort(nextKey: SortKey) {
+    if (sortKey === nextKey) {
+      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+      return;
+    }
+    setSortKey(nextKey);
+    setSortDirection("asc");
+  }
+
+  function sortIndicator(key: SortKey) {
+    if (sortKey !== key) return "↕";
+    return sortDirection === "asc" ? "↑" : "↓";
+  }
 
   function downloadCsv() {
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
@@ -159,6 +220,31 @@ export function OrdersReport({
     } catch {
       setShareMessage(url);
     }
+  }
+
+  function SortHeader({
+    label,
+    sortKey: headerSortKey,
+    nowrap = true,
+  }: {
+    label: string;
+    sortKey: SortKey;
+    nowrap?: boolean;
+  }) {
+    return (
+      <th
+        className={`${nowrap ? "whitespace-nowrap " : ""}px-3 py-2 font-medium text-zinc-700 dark:text-zinc-300`}
+      >
+        <button
+          type="button"
+          onClick={() => toggleSort(headerSortKey)}
+          className="inline-flex items-center gap-1 hover:text-zinc-900 dark:hover:text-zinc-100"
+        >
+          <span>{label}</span>
+          <span className="text-xs">{sortIndicator(headerSortKey)}</span>
+        </button>
+      </th>
+    );
   }
 
   return (
@@ -248,41 +334,29 @@ export function OrdersReport({
         <table className="min-w-full divide-y divide-zinc-200 text-left text-sm dark:divide-zinc-800">
           <thead className="bg-zinc-50 dark:bg-zinc-800/50">
             <tr>
-              <th className="whitespace-nowrap px-3 py-2 font-medium text-zinc-700 dark:text-zinc-300">
-                Submitted
-              </th>
-              <th className="whitespace-nowrap px-3 py-2 font-medium text-zinc-700 dark:text-zinc-300">
-                Order
-              </th>
-              <th className="whitespace-nowrap px-3 py-2 font-medium text-zinc-700 dark:text-zinc-300">
-                Paid
-              </th>
-              <th className="whitespace-nowrap px-3 py-2 font-medium text-zinc-700 dark:text-zinc-300">
-                Total (CAD)
-              </th>
+              <SortHeader label="Submitted" sortKey="submitted" />
+              <SortHeader label="Order" sortKey="order" />
+              <SortHeader label="Paid" sortKey="paid" />
+              <SortHeader label="Total (CAD)" sortKey="total" />
               {fieldKeys.map((key) => (
-                <th
+                <SortHeader
                   key={key}
-                  className="whitespace-nowrap px-3 py-2 font-medium text-zinc-700 dark:text-zinc-300"
-                >
-                  {key}
-                </th>
+                  label={key}
+                  sortKey={`field:${key}`}
+                />
               ))}
-              <th className="whitespace-nowrap px-3 py-2 font-medium text-zinc-700 dark:text-zinc-300">
-                Ordered items
-              </th>
+              <SortHeader label="Ordered items" sortKey="ordered_items" />
               {visibleItemColumns.map((item) => (
-                <th
+                <SortHeader
                   key={item.id}
-                  className="whitespace-nowrap px-3 py-2 font-medium text-zinc-700 dark:text-zinc-300"
-                >
-                  {item.name}
-                </th>
+                  label={item.name}
+                  sortKey={`item:${item.id}`}
+                />
               ))}
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-            {filteredRows.length === 0 ? (
+            {sortedRows.length === 0 ? (
               <tr>
                 <td
                   colSpan={5 + fieldKeys.length + visibleItemColumns.length}
@@ -292,7 +366,7 @@ export function OrdersReport({
                 </td>
               </tr>
             ) : (
-              filteredRows.map((row) => (
+              sortedRows.map((row) => (
                 <tr
                   key={row.id}
                   className="hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40"
