@@ -14,6 +14,7 @@ export interface Fundraiser {
   description: string | null;
   e_transfer_email: string | null;
   closed_message: string;
+  order_confirmation_message: string;
   created_at: string;
   updated_at: string;
 }

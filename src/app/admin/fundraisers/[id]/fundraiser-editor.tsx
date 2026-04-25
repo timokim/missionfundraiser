@@ -45,6 +45,14 @@ function publicFormUrl(publicId: string) {
   return base ? `${base}/f/${publicId}` : `/f/${publicId}`;
 }
 
+function onsiteFormUrl(publicId: string) {
+  if (typeof window !== "undefined") {
+    return `${window.location.origin}/f/${publicId}/onsite`;
+  }
+  const base = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "";
+  return base ? `${base}/f/${publicId}/onsite` : `/f/${publicId}/onsite`;
+}
+
 export function FundraiserEditor({
   userId,
   fundraiser: initial,
@@ -69,6 +77,9 @@ export function FundraiserEditor({
   const [status, setStatus] = useState(initial.status);
   const [closedMessage, setClosedMessage] = useState(
     initial.closed_message ?? ""
+  );
+  const [orderConfirmationMessage, setOrderConfirmationMessage] = useState(
+    initial.order_confirmation_message ?? ""
   );
 
   const sortedItems = useMemo(
@@ -130,6 +141,16 @@ export function FundraiserEditor({
     }
   }
 
+  async function copyOnsiteLink() {
+    const url = onsiteFormUrl(initial.public_id);
+    try {
+      await navigator.clipboard.writeText(url);
+      setMsg("On-site link copied to clipboard.");
+    } catch {
+      setMsg(url);
+    }
+  }
+
   return (
     <div className="space-y-10">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -156,6 +177,13 @@ export function FundraiserEditor({
             className="rounded-lg border border-zinc-300 px-3 py-2 text-sm font-medium text-zinc-800 hover:bg-zinc-100 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800"
           >
             Copy public link
+          </button>
+          <button
+            type="button"
+            onClick={() => copyOnsiteLink()}
+            className="rounded-lg border border-zinc-300 px-3 py-2 text-sm font-medium text-zinc-800 hover:bg-zinc-100 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-800"
+          >
+            Copy 현장주문 link
           </button>
         </div>
       </div>
@@ -291,6 +319,30 @@ export function FundraiserEditor({
               Visitors still see your title, hero, and description; ordering is
               disabled while status is Closed.
             </p>
+          </div>
+          <div>
+            <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+              Order confirmation text
+            </label>
+            <textarea
+              rows={4}
+              className="mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 outline-none focus:ring-2 focus:ring-zinc-400 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
+              placeholder="Shown on the confirmation page after someone submits an order."
+              value={orderConfirmationMessage}
+              onChange={(e) => setOrderConfirmationMessage(e.target.value)}
+              onBlur={() => {
+                if (
+                  orderConfirmationMessage !==
+                  (initial.order_confirmation_message ?? "")
+                ) {
+                  runAction(() =>
+                    updateFundraiser(initial.id, {
+                      order_confirmation_message: orderConfirmationMessage,
+                    })
+                  );
+                }
+              }}
+            />
           </div>
         </div>
       </section>

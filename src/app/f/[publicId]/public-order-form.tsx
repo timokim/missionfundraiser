@@ -3,8 +3,9 @@
 import { db } from "@/lib/supabase/fundraiser-schema";
 import { createClient } from "@/lib/supabase/client";
 import type { PublishedFundraiserBundle } from "@/types/database";
-import { useMemo, useState } from "react";
 import { nanoid } from "nanoid";
+import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
 
 function formatMoney(cents: number) {
   return new Intl.NumberFormat(undefined, {
@@ -13,18 +14,25 @@ function formatMoney(cents: number) {
   }).format(cents / 100);
 }
 
-export function PublicOrderForm({ bundle }: { bundle: PublishedFundraiserBundle }) {
+type PublicOrderFormMode = "default" | "onsite";
+
+export function PublicOrderForm({
+  bundle,
+  mode = "default",
+}: {
+  bundle: PublishedFundraiserBundle;
+  mode?: PublicOrderFormMode;
+}) {
+  const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [responses, setResponses] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [done, setDone] = useState<{ id: string; totalCents: number } | null>(
-    null
-  );
   const [idempotencyKey] = useState(() => nanoid());
 
   const f = bundle.fundraiser;
+  const isOnsite = mode === "onsite";
 
   const totalCents = useMemo(() => {
     let t = 0;
@@ -37,28 +45,30 @@ export function PublicOrderForm({ bundle }: { bundle: PublishedFundraiserBundle 
     return t;
   }, [bundle.items, quantities]);
 
-  const hasAnyPricedItem = bundle.items.some(
-    (i) => i.unit_price_cents != null
-  );
+  const hasAnyPricedItem = bundle.items.some((i) => i.unit_price_cents != null);
 
   if (bundle.form_state === "closed") {
     return (
       <div className="space-y-6">
-        <header className="space-y-4">
-          {f.hero_image_url && (
+        <header className="space-y-3">
+          {!isOnsite && f.hero_image_url ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={f.hero_image_url}
-              alt=""
-              // original class that restricted the image size
-              // className="aspect-[21/9] w-full rounded-2xl object-cover"
-              className="w-full h-auto rounded-2xl"
-            />
-            // TODO: make the hero image show the full thing
+            <img src={f.hero_image_url} alt="" className="h-auto w-full rounded-2xl" />
+          ) : null}
+          {isOnsite ? (
+            <>
+              <p className="text-sm font-semibold uppercase tracking-[0.3em] text-emerald-600">
+                {f.title}
+              </p>
+              <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+                현장주문
+              </h1>
+            </>
+          ) : (
+            <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+              {f.title}
+            </h1>
           )}
-          <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
-            {f.title}
-          </h1>
           {f.description ? (
             <p className="whitespace-pre-wrap text-zinc-600 dark:text-zinc-400">
               {f.description}
@@ -89,13 +99,21 @@ export function PublicOrderForm({ bundle }: { bundle: PublishedFundraiserBundle 
     e.preventDefault();
     setError(null);
     setSubmitting(true);
+
     const line_items = Object.entries(quantities)
       .filter(([, q]) => q > 0)
       .map(([item_id, quantity]) => ({ item_id, quantity }));
 
+    const payloadResponses = isOnsite
+      ? {
+          name: responses.name ?? "",
+          __submission_mode: "onsite",
+        }
+      : responses;
+
     const { data, error: rpcErr } = await db(supabase).rpc("submit_order", {
       p_public_id: f.public_id,
-      p_responses: responses,
+      p_responses: payloadResponses,
       p_line_items: line_items,
       p_idempotency_key: idempotencyKey,
     });
@@ -117,53 +135,40 @@ export function PublicOrderForm({ bundle }: { bundle: PublishedFundraiserBundle 
       return;
     }
 
-    const payload = data as { order_id?: string; total_cents?: number } | null;
+    const payload = data as { order_id?: string } | null;
     const oid = payload?.order_id;
     if (!oid) {
       setError("Unexpected response. Try again.");
       return;
     }
-    setDone({
-      id: oid,
-      totalCents: payload?.total_cents ?? totalCents,
-    });
-  }
 
-  if (done) {
-    return (
-      <div className="mx-auto max-w-lg rounded-2xl border border-emerald-200 bg-emerald-50 p-8 text-center dark:border-emerald-900 dark:bg-emerald-950/40">
-        <h2 className="text-xl font-semibold text-emerald-900 dark:text-emerald-100">
-          Thank you!
-        </h2>
-        <p className="mt-2 text-sm text-emerald-800 dark:text-emerald-200">
-          Your order was recorded. Reference:{" "}
-          <span className="font-mono text-xs">{done.id}</span>
-        </p>
-        {hasAnyPricedItem && (
-          <p className="mt-4 text-lg font-semibold tabular-nums text-emerald-900 dark:text-emerald-100">
-            Total {formatMoney(done.totalCents)}
-          </p>
-        )}
-      </div>
-    );
+    const confirmationUrl = isOnsite
+      ? `/f/${f.public_id}/confirmation/${oid}?source=onsite`
+      : `/f/${f.public_id}/confirmation/${oid}`;
+    router.push(confirmationUrl);
   }
 
   return (
     <form onSubmit={onSubmit} className="space-y-10">
       <header className="space-y-4">
-        {f.hero_image_url && (
+        {!isOnsite && f.hero_image_url ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={f.hero_image_url}
-            alt=""
-            // original class that restricted the image size
-            // className="aspect-[21/9] w-full rounded-2xl object-cover"
-            className="w-full h-auto rounded-2xl"
-          />
+          <img src={f.hero_image_url} alt="" className="h-auto w-full rounded-2xl" />
+        ) : null}
+        {isOnsite ? (
+          <>
+            <p className="text-sm font-semibold uppercase tracking-[0.3em] text-emerald-600">
+              {f.title}
+            </p>
+            <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+              현장주문
+            </h1>
+          </>
+        ) : (
+          <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+            {f.title}
+          </h1>
         )}
-        <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
-          {f.title}
-        </h1>
         {f.description ? (
           <p className="whitespace-pre-wrap text-zinc-600 dark:text-zinc-400">
             {f.description}
@@ -212,12 +217,12 @@ export function PublicOrderForm({ bundle }: { bundle: PublishedFundraiserBundle 
                         </>
                       )}
                     </p>
-                    {item.unit_price_cents != null && (
+                    {item.unit_price_cents != null ? (
                       <p className="mt-1 text-sm font-medium text-zinc-800 dark:text-zinc-200">
                         {formatMoney(item.unit_price_cents)}
                         {item.unit_label ? ` / ${item.unit_label}` : ""}
                       </p>
-                    )}
+                    ) : null}
                   </div>
                   {item.image_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -228,7 +233,7 @@ export function PublicOrderForm({ bundle }: { bundle: PublishedFundraiserBundle 
                     />
                   ) : null}
                 </div>
-                {!soldOut && (
+                {!soldOut ? (
                   <div className="mt-4 flex items-center gap-3">
                     <button
                       type="button"
@@ -245,16 +250,14 @@ export function PublicOrderForm({ bundle }: { bundle: PublishedFundraiserBundle 
                     <button
                       type="button"
                       aria-label="Increase quantity"
-                      disabled={
-                        submitting || (maxPick !== null && qty >= maxPick)
-                      }
+                      disabled={submitting || (maxPick !== null && qty >= maxPick)}
                       className="flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-300 text-lg font-medium hover:bg-zinc-50 disabled:opacity-40 dark:border-zinc-600 dark:hover:bg-zinc-800"
                       onClick={() => setQty(item.id, qty + 1, maxPick)}
                     >
                       +
                     </button>
                   </div>
-                )}
+                ) : null}
               </li>
             );
           })}
@@ -263,87 +266,107 @@ export function PublicOrderForm({ bundle }: { bundle: PublishedFundraiserBundle 
 
       <section>
         <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-          Your details
+          {isOnsite ? "Name" : "Your details"}
         </h2>
         <div className="mt-4 space-y-4">
-          {bundle.fields.map((field) => (
-            <div key={field.id}>
+          {isOnsite ? (
+            <div>
               <label
-                htmlFor={field.key}
+                htmlFor="name"
                 className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
               >
-                {field.label}
-                {field.required ? (
-                  <span className="text-red-500"> *</span>
-                ) : null}
+                Name <span className="text-red-500">*</span>
               </label>
-              {field.type === "textarea" ? (
-                <textarea
-                  id={field.key}
-                  required={field.required}
-                  rows={3}
-                  value={responses[field.key] ?? ""}
-                  onChange={(e) =>
-                    setResponses((r) => ({ ...r, [field.key]: e.target.value }))
-                  }
-                  className="mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 outline-none focus:ring-2 focus:ring-emerald-500/40 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
-                />
-              ) : field.type === "select" ? (
-                <select
-                  id={field.key}
-                  required={field.required}
-                  value={responses[field.key] ?? ""}
-                  onChange={(e) =>
-                    setResponses((r) => ({ ...r, [field.key]: e.target.value }))
-                  }
-                  className="mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
-                >
-                  <option value="">Choose…</option>
-                  {(field.options ?? []).map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                <input
-                  id={field.key}
-                  type={
-                    field.type === "email"
-                      ? "email"
-                      : field.type === "phone"
-                        ? "tel"
-                        : "text"
-                  }
-                  required={field.required}
-                  value={responses[field.key] ?? ""}
-                  onChange={(e) =>
-                    setResponses((r) => ({ ...r, [field.key]: e.target.value }))
-                  }
-                  className="mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 outline-none focus:ring-2 focus:ring-emerald-500/40 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
-                />
-              )}
+              <input
+                id="name"
+                type="text"
+                required
+                value={responses.name ?? ""}
+                onChange={(e) =>
+                  setResponses((r) => ({ ...r, name: e.target.value }))
+                }
+                className="mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 outline-none focus:ring-2 focus:ring-emerald-500/40 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
+              />
             </div>
-          ))}
+          ) : (
+            bundle.fields.map((field) => (
+              <div key={field.id}>
+                <label
+                  htmlFor={field.key}
+                  className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+                >
+                  {field.label}
+                  {field.required ? <span className="text-red-500"> *</span> : null}
+                </label>
+                {field.type === "textarea" ? (
+                  <textarea
+                    id={field.key}
+                    required={field.required}
+                    rows={3}
+                    value={responses[field.key] ?? ""}
+                    onChange={(e) =>
+                      setResponses((r) => ({ ...r, [field.key]: e.target.value }))
+                    }
+                    className="mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 outline-none focus:ring-2 focus:ring-emerald-500/40 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
+                  />
+                ) : field.type === "select" ? (
+                  <select
+                    id={field.key}
+                    required={field.required}
+                    value={responses[field.key] ?? ""}
+                    onChange={(e) =>
+                      setResponses((r) => ({ ...r, [field.key]: e.target.value }))
+                    }
+                    className="mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
+                  >
+                    <option value="">Choose…</option>
+                    {(field.options ?? []).map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    id={field.key}
+                    type={
+                      field.type === "email"
+                        ? "email"
+                        : field.type === "phone"
+                          ? "tel"
+                          : "text"
+                    }
+                    required={field.required}
+                    value={responses[field.key] ?? ""}
+                    onChange={(e) =>
+                      setResponses((r) => ({ ...r, [field.key]: e.target.value }))
+                    }
+                    className="mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 outline-none focus:ring-2 focus:ring-emerald-500/40 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
+                  />
+                )}
+              </div>
+            ))
+          )}
         </div>
       </section>
 
-      {hasAnyPricedItem && (
+      {hasAnyPricedItem ? (
         <div className="flex items-center justify-between rounded-2xl border border-zinc-200 bg-white px-4 py-4 dark:border-zinc-800 dark:bg-zinc-900">
           <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            <b>{f.e_transfer_email ? `${f.e_transfer_email}` : ""}</b>으로 e-transfer 부탁드립니다!
+            <b>{f.e_transfer_email ? `${f.e_transfer_email}` : ""}</b>
+            으로 e-transfer 부탁드립니다!
           </span>
           <span className="text-lg font-semibold tabular-nums text-zinc-900 dark:text-zinc-50">
             {formatMoney(totalCents)}
           </span>
         </div>
-      )}
+      ) : null}
 
-      {error && (
+      {error ? (
         <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800 dark:bg-red-950/50 dark:text-red-200">
           {error}
         </p>
-      )}
+      ) : null}
 
       <button
         type="submit"

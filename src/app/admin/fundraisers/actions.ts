@@ -48,6 +48,7 @@ export async function updateFundraiser(
     e_transfer_email?: string | null;
     status?: "draft" | "published" | "closed";
     closed_message?: string;
+    order_confirmation_message?: string;
     hero_image_url?: string | null;
   }
 ) {
