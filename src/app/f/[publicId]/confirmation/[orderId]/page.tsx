@@ -1,6 +1,6 @@
 import { db } from "@/lib/supabase/fundraiser-schema";
 import { createClient } from "@/lib/supabase/server";
-import Link from "next/link";
+// import Link from "next/link";
 import { notFound } from "next/navigation";
 
 function formatMoney(cents: number) {
@@ -57,7 +57,7 @@ export default async function PublicOrderConfirmationPage({
     notFound();
   }
 
-  const isOnsite = searchParams?.source === "onsite";
+  // const isOnsite = searchParams?.source === "onsite";
   const buyerName = payload.order.responses?.name?.trim();
 
   return (
