@@ -37,10 +37,10 @@ export const dynamic = "force-dynamic";
 
 export default async function PublicOrderConfirmationPage({
   params,
-  searchParams,
+  // searchParams,
 }: {
   params: { publicId: string; orderId: string };
-  searchParams?: { source?: string };
+  // searchParams?: { source?: string };
 }) {
   const supabase = await createClient();
   const { data, error } = await db(supabase).rpc("get_public_order_confirmation", {
