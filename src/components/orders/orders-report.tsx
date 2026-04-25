@@ -17,6 +17,20 @@ function formatCurrency(cents: number) {
   }).format(cents / 100);
 }
 
+function formatOrderedItems(
+  row: OrderRow,
+  itemColumns: OrderItemColumn[]
+) {
+  return itemColumns
+    .map((item) => {
+      const quantity = Number(row.lineQty[item.id] ?? 0);
+      if (quantity <= 0) return null;
+      return `${item.name} x ${quantity}`;
+    })
+    .filter((value): value is string => Boolean(value))
+    .join(", ");
+}
+
 function publicOrdersUrl(publicId: string) {
   if (typeof window !== "undefined") {
     return `${window.location.origin}/f/${publicId}/orders`;
@@ -105,6 +119,7 @@ export function OrdersReport({
       "order_id",
       "total_cad",
       ...fieldKeys,
+      "ordered_items",
       ...visibleItemColumns.map((c) => `item:${c.name}`),
     ];
     const escape = (value: string) => {
@@ -118,12 +133,13 @@ export function OrdersReport({
         row.id,
         formatTotal(row.total_cents),
         ...fieldKeys.map((key) => String(row.responses[key] ?? "")),
+        formatOrderedItems(row, itemColumns),
         ...visibleItemColumns.map((item) => String(row.lineQty[item.id] ?? "")),
       ];
       lines.push(values.map(escape).join(","));
     }
     return lines.join("\n");
-  }, [fieldKeys, filteredRows, visibleItemColumns]);
+  }, [fieldKeys, filteredRows, itemColumns, visibleItemColumns]);
 
   function downloadCsv() {
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
@@ -252,6 +268,9 @@ export function OrdersReport({
                   {key}
                 </th>
               ))}
+              <th className="whitespace-nowrap px-3 py-2 font-medium text-zinc-700 dark:text-zinc-300">
+                Ordered items
+              </th>
               {visibleItemColumns.map((item) => (
                 <th
                   key={item.id}
@@ -266,7 +285,7 @@ export function OrdersReport({
             {filteredRows.length === 0 ? (
               <tr>
                 <td
-                  colSpan={4 + fieldKeys.length + visibleItemColumns.length}
+                  colSpan={5 + fieldKeys.length + visibleItemColumns.length}
                   className="px-3 py-8 text-center text-zinc-500"
                 >
                   No matching orders.
@@ -314,6 +333,9 @@ export function OrdersReport({
                       {row.responses[key] ?? ""}
                     </td>
                   ))}
+                  <td className="whitespace-nowrap px-3 py-2 text-zinc-800 dark:text-zinc-200">
+                    {formatOrderedItems(row, itemColumns)}
+                  </td>
                   {visibleItemColumns.map((item) => (
                     <td
                       key={item.id}

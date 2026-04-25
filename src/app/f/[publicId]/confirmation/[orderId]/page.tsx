@@ -63,6 +63,16 @@ export default async function PublicOrderConfirmationPage({
   return (
     <main className="min-h-screen bg-zinc-50 px-4 py-10 dark:bg-zinc-950">
       <div className="mx-auto max-w-3xl space-y-6">
+        {payload.fundraiser.order_confirmation_message?.trim() ? (
+          <section className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+            <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+              ⚠️ 안내 ⚠️
+            </h2>
+            <p className="mt-3 whitespace-pre-wrap text-zinc-700 dark:text-zinc-300">
+              {payload.fundraiser.order_confirmation_message}
+            </p>
+          </section>
+        ) : null}
         <header className="rounded-3xl border border-emerald-200 bg-white p-8 shadow-sm dark:border-emerald-900/60 dark:bg-zinc-900">
           <p className="text-sm font-semibold uppercase tracking-[0.3em] text-emerald-600">
             {payload.fundraiser.title}
@@ -72,7 +82,7 @@ export default async function PublicOrderConfirmationPage({
           </h1>
           {buyerName ? (
             <p className="mt-2 text-lg text-zinc-600 dark:text-zinc-300">
-              {buyerName}
+              Name: {buyerName}
             </p>
           ) : null}
           <div className="mt-8 rounded-2xl bg-emerald-50 px-6 py-8 text-center dark:bg-emerald-950/30">
@@ -86,7 +96,7 @@ export default async function PublicOrderConfirmationPage({
         </header>
 
         <section className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-          <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+          <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">
             Order Summary
           </h2>
           <ul className="mt-4 divide-y divide-zinc-100 dark:divide-zinc-800">
@@ -96,15 +106,15 @@ export default async function PublicOrderConfirmationPage({
                 className="flex items-start justify-between gap-4 py-4"
               >
                 <div>
-                  <p className="font-medium text-zinc-900 dark:text-zinc-100">
+                  <p className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
                     {item.name}
                   </p>
-                  <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                  <p className="mt-1 text-base text-zinc-500 dark:text-zinc-400">
                     {item.quantity}
                     {item.unit_label ? ` ${item.unit_label}` : ""}
                   </p>
                 </div>
-                <p className="text-right font-semibold tabular-nums text-zinc-900 dark:text-zinc-100">
+                <p className="text-right text-lg font-bold tabular-nums text-zinc-900 dark:text-zinc-100">
                   {formatMoney(item.line_total_cents)}
                 </p>
               </li>
@@ -112,7 +122,7 @@ export default async function PublicOrderConfirmationPage({
           </ul>
         </section>
 
-        {payload.fundraiser.order_confirmation_message?.trim() ? (
+        {/* {payload.fundraiser.order_confirmation_message?.trim() ? (
           <section className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
             <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
               안내
@@ -121,7 +131,7 @@ export default async function PublicOrderConfirmationPage({
               {payload.fundraiser.order_confirmation_message}
             </p>
           </section>
-        ) : null}
+        ) : null} */}
 
         {/* <div className="flex flex-wrap gap-3">
           <Link
