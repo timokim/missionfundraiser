@@ -123,14 +123,14 @@ export default async function PublicOrderConfirmationPage({
           </section>
         ) : null}
 
-        <div className="flex flex-wrap gap-3">
+        {/* <div className="flex flex-wrap gap-3">
           <Link
             href={isOnsite ? `/f/${payload.fundraiser.public_id}/onsite` : `/f/${payload.fundraiser.public_id}`}
             className="rounded-xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-500"
           >
             {isOnsite ? "새 현장주문으로 돌아가기" : "Back to fundraiser"}
           </Link>
-        </div>
+        </div> */}
       </div>
     </main>
   );

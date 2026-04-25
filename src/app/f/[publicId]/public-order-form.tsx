@@ -69,11 +69,12 @@ export function PublicOrderForm({
               {f.title}
             </h1>
           )}
-          {f.description ? (
+          {f.description && !isOnsite ? (
             <p className="whitespace-pre-wrap text-zinc-600 dark:text-zinc-400">
               {f.description}
             </p>
           ) : null}
+     
         </header>
         <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 dark:border-amber-900 dark:bg-amber-950/40">
           <p className="text-sm font-semibold uppercase tracking-wide text-amber-900 dark:text-amber-200">
@@ -169,7 +170,7 @@ export function PublicOrderForm({
             {f.title}
           </h1>
         )}
-        {f.description ? (
+        {f.description && !isOnsite ? (
           <p className="whitespace-pre-wrap text-zinc-600 dark:text-zinc-400">
             {f.description}
           </p>
@@ -352,10 +353,13 @@ export function PublicOrderForm({
 
       {hasAnyPricedItem ? (
         <div className="flex items-center justify-between rounded-2xl border border-zinc-200 bg-white px-4 py-4 dark:border-zinc-800 dark:bg-zinc-900">
-          <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            <b>{f.e_transfer_email ? `${f.e_transfer_email}` : ""}</b>
-            으로 e-transfer 부탁드립니다!
-          </span>
+          {!isOnsite && (
+            <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+              <b>{f.e_transfer_email ? `${f.e_transfer_email}` : ""}</b>
+              으로 e-transfer 부탁드립니다!
+            </span>
+          )}
+     
           <span className="text-lg font-semibold tabular-nums text-zinc-900 dark:text-zinc-50">
             {formatMoney(totalCents)}
           </span>
