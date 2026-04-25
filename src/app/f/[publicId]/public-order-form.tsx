@@ -33,19 +33,23 @@ export function PublicOrderForm({
 
   const f = bundle.fundraiser;
   const isOnsite = mode === "onsite";
+  const visibleItems = useMemo(() => {
+    if (!isOnsite) return bundle.items;
+    return bundle.items.filter((item) => item.remaining === null || item.remaining > 0);
+  }, [bundle.items, isOnsite]);
 
   const totalCents = useMemo(() => {
     let t = 0;
-    for (const item of bundle.items) {
+    for (const item of visibleItems) {
       const q = quantities[item.id] ?? 0;
       if (q > 0 && item.unit_price_cents != null) {
         t += q * item.unit_price_cents;
       }
     }
     return t;
-  }, [bundle.items, quantities]);
+  }, [quantities, visibleItems]);
 
-  const hasAnyPricedItem = bundle.items.some((i) => i.unit_price_cents != null);
+  const hasAnyPricedItem = visibleItems.some((i) => i.unit_price_cents != null);
 
   if (bundle.form_state === "closed") {
     return (
@@ -182,7 +186,7 @@ export function PublicOrderForm({
           Items
         </h2>
         <ul className="mt-4 grid gap-4 sm:grid-cols-2">
-          {bundle.items.map((item) => {
+          {visibleItems.map((item) => {
             const remaining = item.remaining;
             const soldOut = remaining !== null && remaining <= 0;
             const maxPick = remaining;

@@ -77,7 +77,7 @@ export function OrdersReport({
   const [selectedServiceNo, setSelectedServiceNo] = useState("");
   const [shareMessage, setShareMessage] = useState<string | null>(null);
   const [sortKey, setSortKey] = useState<SortKey>("submitted");
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
 
   const serviceNoOptions = useMemo(() => {
     return Array.from(
