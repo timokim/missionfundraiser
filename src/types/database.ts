@@ -1,4 +1,4 @@
-export type FundraiserStatus = "draft" | "published" | "closed";
+export type FundraiserStatus = "draft" | "published" | "on_site" | "closed";
 
 export type FormFieldType = "text" | "email" | "phone" | "textarea" | "select";
 

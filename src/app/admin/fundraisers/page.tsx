@@ -86,6 +86,9 @@ export default async function FundraisersPage() {
     if (status === "published") {
       return "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300";
     }
+    if (status === "on_site") {
+      return "bg-sky-100 text-sky-900 dark:bg-sky-950 dark:text-sky-200";
+    }
     if (status === "closed") {
       return "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-200";
     }
@@ -94,6 +97,7 @@ export default async function FundraisersPage() {
 
   function statusLabel(status: string) {
     if (status === "published") return "Published";
+    if (status === "on_site") return "On-site";
     if (status === "closed") return "Closed";
     if (status === "draft") return "Draft";
     return status;

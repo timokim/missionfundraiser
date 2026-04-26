@@ -14,6 +14,7 @@ export default async function PublicFundraiserOnsitePage({
   const supabase = await createClient();
   const { data, error } = await db(supabase).rpc("get_published_fundraiser", {
     p_public_id: params.publicId,
+    p_mode: "onsite",
   });
 
   if (error || data == null) {

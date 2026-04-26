@@ -46,7 +46,7 @@ export async function updateFundraiser(
     title?: string;
     description?: string | null;
     e_transfer_email?: string | null;
-    status?: "draft" | "published" | "closed";
+    status?: "draft" | "published" | "on_site" | "closed";
     closed_message?: string;
     order_confirmation_message?: string;
     hero_image_url?: string | null;

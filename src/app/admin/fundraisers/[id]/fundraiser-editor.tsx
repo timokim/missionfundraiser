@@ -284,14 +284,15 @@ export function FundraiserEditor({
               value={status}
               disabled={pending}
               onChange={(e) => {
-                const v = e.target.value as "draft" | "published" | "closed";
+                const v = e.target.value as "draft" | "published" | "on_site" | "closed";
                 setStatus(v);
                 runAction(() => updateFundraiser(initial.id, { status: v }));
               }}
               className="w-full max-w-md rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
             >
               <option value="draft">Draft (not public)</option>
-              <option value="published">Published (accepting orders)</option>
+              <option value="published">Published (pre-order and on-site open)</option>
+              <option value="on_site">On-site (pre-order closed, on-site open)</option>
               <option value="closed">Closed (read-only public page)</option>
             </select>
           </div>
@@ -316,8 +317,9 @@ export function FundraiserEditor({
               }}
             />
             <p className="mt-1 text-xs text-zinc-500">
-              Visitors still see your title, hero, and description; ordering is
-              disabled while status is Closed.
+              `Published` keeps both links open. `On-site` closes the regular
+              pre-order link while keeping the 현장주문 link open. `Closed`
+              disables ordering everywhere.
             </p>
           </div>
           <div>
