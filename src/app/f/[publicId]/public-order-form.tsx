@@ -86,7 +86,7 @@ export function PublicOrderForm({
           </p>
           <p className="mt-3 whitespace-pre-wrap text-amber-950 dark:text-amber-100">
             {isOnsite
-              ? "현장판매 주문서는 1부/2부 예배 직후에만 활성화가 되어있을 예정입니다.\n3:30PM과 6:00PM에 다시 확인해주시고 많은 관심과 참여를 부탁드립니다!\nຂອບໃຈຫຼາຍໆ : 컵짜이 라이 = 감사합니다~~"
+              ? "현장판매 주문서는 1부 예배 후(3:30PM)에 활성화될 예정입니다.\n예배 후에 다시 확인해주시고 많은 관심과 참여 부탁드립니다!\nຂອບໃຈຫຼາຍໆ : 컵짜이라이 = 감사합니다~~"
               : bundle.closed_message?.trim()
                 ? bundle.closed_message
                 : "This order form is no longer accepting responses."}
