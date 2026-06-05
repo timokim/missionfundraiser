@@ -1,548 +1,624 @@
 # Admin User Manual
 
-This guide explains how to use the fundraiser admin app from an organizer's perspective.
+This guide explains how to use the fundraiser admin app from an organizer's perspective. It documents every major feature in the app as of the current codebase.
 
-It covers:
+For a shorter Korean quick-start guide, see [`simple_manual/HOW_TO.ko.md`](simple_manual/HOW_TO.ko.md).
 
-- logging in
-- creating a fundraiser
-- setting up the public order form
-- adding menu items
-- adding form fields
-- publishing and sharing links
-- adding collaborators
-- reviewing and managing orders
+## Table of Contents
+
+1. [What This App Does](#what-this-app-does)
+2. [URLs and Pages](#urls-and-pages)
+3. [Admin Flow Overview](#admin-flow-overview)
+4. [Logging In and Out](#logging-in-and-out)
+5. [Fundraisers List](#fundraisers-list)
+6. [Creating a New Fundraiser](#creating-a-new-fundraiser)
+7. [Editing Fundraiser Basics](#editing-fundraiser-basics)
+8. [Fundraiser Status](#fundraiser-status)
+9. [Public Links](#public-links)
+10. [Menu Items](#menu-items)
+11. [Order Form Fields](#order-form-fields)
+12. [Collaborators](#collaborators)
+13. [Public Pre-Order Form](#public-pre-order-form)
+14. [Public On-Site Form (현장주문)](#public-on-site-form-현장주문)
+15. [Order Confirmation Page](#order-confirmation-page)
+16. [Orders Management](#orders-management)
+17. [Order Detail Page](#order-detail-page)
+18. [Public Orders Page (Share Link)](#public-orders-page-share-link)
+19. [Recommended Admin Workflow](#recommended-admin-workflow)
+20. [Tips and Best Practices](#tips-and-best-practices)
+21. [Troubleshooting](#troubleshooting)
+
+---
 
 ## What This App Does
 
-The app lets church or event admins create a public order form for a fundraiser.
+The app lets church or event admins create and manage public order forms for fundraisers.
 
 Admins can:
 
+- sign in with a magic link (no password)
 - create and manage multiple fundraisers
-- configure public fundraiser details such as title, description, hero image, and payment email
-- add menu items with pricing, stock caps, and images
+- configure title, description, hero image, e-transfer email, and custom messages
+- add menu items with pricing, quantity caps, images, and display order
 - add custom form fields to collect buyer information
-- publish a public order form link
-- close a fundraiser while keeping the public page visible in read-only mode
-- invite collaborators to help manage the fundraiser
-- review submitted orders in spreadsheet and detail views
+- publish **pre-order** and **on-site (현장주문)** links separately
+- control ordering with four statuses: Draft, Published, On-site, and Closed
+- invite collaborators to help manage a fundraiser
+- review orders in a spreadsheet view with filters, sorting, and revenue summaries
 - mark orders as paid
-- delete orders when needed
+- delete incorrect orders
+- export orders to CSV
+- share a read-only public orders page with people who do not need admin access
+
+Buyers (no login required) can:
+
+- submit pre-orders through the public form
+- submit on-site orders through the 현장주문 form
+- see an order confirmation page after submitting
+
+---
+
+## URLs and Pages
+
+| URL | Who | Purpose |
+|-----|-----|---------|
+| `/` | Anyone | Landing page with login button |
+| `/login` | Admin | Magic-link sign-in |
+| `/admin/fundraisers` | Admin | Fundraiser list |
+| `/admin/fundraisers/[id]` | Admin | Fundraiser editor |
+| `/admin/fundraisers/[id]/orders` | Admin | Orders spreadsheet |
+| `/admin/fundraisers/[id]/orders/[orderId]` | Admin | Order detail |
+| `/f/[publicId]` | Public | Pre-order form |
+| `/f/[publicId]/onsite` | Public | On-site order form |
+| `/f/[publicId]/confirmation/[orderId]` | Public | Post-submit confirmation |
+| `/f/[publicId]/orders` | Public | Read-only orders report (share link) |
+
+All `/admin/*` routes require login. Public `/f/*` routes do not.
+
+---
 
 ## Admin Flow Overview
 
-The typical workflow is:
+A typical workflow:
 
-1. Log in.
+1. Log in via magic link.
 2. Create a new fundraiser.
-3. Fill in the fundraiser basics.
-4. Add menu items.
-5. Add custom order form fields.
-6. Set the fundraiser status to `Published`.
-7. Copy and share the public order form link.
-8. Monitor incoming orders from the orders page.
-9. Mark orders as paid and remove incorrect orders if necessary.
-10. Add collaborators if others need to help manage the fundraiser.
-11. When the fundraiser is finished, set it to `Closed`.
+3. Fill in basics (title, description, e-transfer email, images, messages).
+4. Add menu items and form fields.
+5. Test links while still in `Draft` is not possible publicly — switch to `Published` first (or test after publishing).
+6. Set status to `Published` and share the pre-order link.
+7. Monitor orders from the orders page; mark paid as payments arrive.
+8. On event day, switch to `On-site` and share the 현장주문 link.
+9. Share the orders report link if others need visibility without admin access.
+10. Add collaborators if needed.
+11. Set status to `Closed` when finished.
 
-## Logging In
+---
 
-Go to the app homepage and click `로그인`.
+## Logging In and Out
 
-After login:
+### Sign in
 
-- you will be taken to `/admin/fundraisers`
-- if you already have fundraisers, you will see them listed there
-- if you have been added as a collaborator on someone else's fundraiser, shared fundraisers will appear in the same list with a `(shared)` label
+1. Go to the app homepage and click **로그인**.
+2. Enter your email address.
+3. Click **Send magic link**.
+4. Check your inbox and click the link in the email.
+5. You are redirected to `/admin/fundraisers` (or the page you were trying to open).
+
+There is no password. Each sign-in uses a one-time email link.
+
+If sign-in fails, you may see **Sign-in failed. Try again.** on the login page.
+
+### Admin header
+
+While logged in, the admin header shows:
+
+- app title (큰빛 다운타운 선교 펀드레이징)
+- your email address
+- **Sign out** button
+
+### Sign out
+
+Click **Sign out** in the admin header to end your session.
+
+---
 
 ## Fundraisers List
 
-The `Your fundraisers` page shows:
+The **Your fundraisers** page shows:
 
-- all fundraisers you own
-- all fundraisers shared with you
-- each fundraiser's current status
-- the current order count
+- fundraisers you own
+- fundraisers shared with you (marked **(shared)**)
+- each fundraiser's status badge (Draft, Published, On-site, Closed)
+- order count per fundraiser
+
+Fundraisers are sorted by most recently updated.
 
 From this page you can:
 
-- click `New fundraiser` to create a new fundraiser
-- click an existing fundraiser to open its editor
+- click **New fundraiser** to create one
+- click a fundraiser row to open its editor
+
+If the list fails to load, an error box appears with setup hints (environment variables, migrations, Supabase schema exposure).
+
+There is no delete-fundraiser button in the UI.
+
+---
 
 ## Creating a New Fundraiser
 
-Click `New fundraiser`.
+Click **New fundraiser**.
 
-The app creates a new fundraiser immediately with default values:
+The app immediately creates a fundraiser with:
 
 - title: `Untitled fundraiser`
 - status: `Draft`
 
-You will be redirected straight to that fundraiser's editor page.
+You are redirected to the editor page.
+
+---
 
 ## Editing Fundraiser Basics
 
-At the top of the fundraiser editor, you can configure the core fundraiser settings.
+The **Basics** section at the top of the editor configures core settings.
+
+Most fields **auto-save when you leave the field** (on blur). Status changes save immediately when you pick a new value from the dropdown.
 
 ### Title
 
-Use this for the fundraiser name shown:
-
-- in the admin area
-- on the public form page
+Shown in the admin area and on public order pages.
 
 ### Description
 
-This appears near the top of the public fundraiser page. Use it for:
+Shown at the top of the **pre-order** public form only. Not shown on the on-site form.
 
-- fundraiser purpose
-- pickup or delivery instructions
-- important notes for buyers
+Use it for fundraiser purpose, pickup instructions, and important notes.
 
-### E-transfer Email
+### E-transfer email
 
-If menu items have prices, this email is shown near the total on the public order form so buyers know where to send payment.
+If any menu item has a price, this email is shown on the pre-order form near the total so buyers know where to send payment.
 
-### Hero Image
+On the pre-order form the app displays Korean copy: **"{email}으로 e-transfer 부탁드립니다!"**
 
-You can upload a main image for the fundraiser. This is shown at the top of the public page.
+### Hero image
+
+Upload a main image for the fundraiser. Shown at the top of the **pre-order** form only (not on the on-site form).
+
+Images are stored in Supabase storage (`fundraiser-assets`).
 
 ### Status
 
-Each fundraiser has three states:
+See [Fundraiser Status](#fundraiser-status) below.
 
-- `Draft`: not public
-- `Published`: public and accepting orders
-- `Closed`: public page stays visible, but no new orders can be submitted
+### Message when closed
 
-### Closed Message
+Shown on the **pre-order** form when ordering is closed (status `on_site` or `closed` for that link).
 
-When the fundraiser is `Closed`, visitors still see the page title, image, and description, but they cannot order.
+Use it for end-of-ordering notices, pickup details, or thank-you messages.
 
-Use the closed message to explain:
+If left blank on a closed pre-order page, a default English message is shown: *"This order form is no longer accepting responses."*
 
-- that ordering has ended
-- pickup details
-- thank-you notes
+### Order confirmation text
 
-## Public Link and Orders Link
+Optional message shown at the top of the **order confirmation page** after a buyer submits (under **⚠️ 안내 ⚠️**).
 
-At the top of the fundraiser editor you will see:
+Use it for payment reminders, pickup instructions, or next steps.
 
-- `View orders`
-- `Copy public link`
+---
 
-### Copy Public Link
+## Fundraiser Status
 
-This copies the public customer-facing order form URL.
+Each fundraiser has **four** statuses:
 
-Use this link when you want buyers to:
+| Status | Label in UI | Meaning |
+|--------|-------------|---------|
+| `draft` | Draft (not public) | Not visible to the public |
+| `published` | Published (pre-order and on-site open) | Both links accept orders |
+| `on_site` | On-site (pre-order closed, on-site open) | Pre-order link closed; 현장주문 link open |
+| `closed` | Closed (read-only public page) | No new orders on either link |
 
-- browse menu items
-- fill out the form
-- submit an order
+### What each link does per status
 
-Important:
+| Status | Pre-order `/f/...` | On-site `/f/.../onsite` | Public orders `/f/.../orders` |
+|--------|-------------------|-------------------------|-------------------------------|
+| Draft | **404** (not found) | **404** | **404** |
+| Published | Open | Open | Visible |
+| On-site | Closed (shows closed message) | Open | Visible |
+| Closed | Closed (shows closed message) | Closed (fixed Korean message) | Visible |
 
-- the public link only works when the fundraiser is `Published` or `Closed`
-- `Draft` fundraisers are not intended for public access
+### When to use each status
 
-### View Orders
+- **Draft** — building and testing in the admin editor only.
+- **Published** — accepting pre-orders and on-site orders.
+- **On-site** — event day: stop pre-orders but keep 현장주문 open.
+- **Closed** — ordering finished; pages stay visible as read-only.
 
-This opens the admin orders page for that fundraiser.
+The editor shows a hint under the closed message field explaining how Published, On-site, and Closed affect the two order links.
 
-## Adding and Managing Menu Items
+---
 
-In the `Items` section, click `Add item` to create a new menu item.
+## Public Links
 
-Each item supports the following fields.
+At the top of the fundraiser editor:
 
-### Name
+| Button | Copies |
+|--------|--------|
+| **Copy public link** | Pre-order form URL: `/f/{publicId}` |
+| **Copy 현장주문 link** | On-site form URL: `/f/{publicId}/onsite` |
+| **View orders →** | Opens the admin orders page |
 
-The item name buyers will see.
+If clipboard copy fails, the URL may appear in a message banner on the page instead.
 
-Examples:
+### Important notes
 
-- Kimchi
-- Mandu
-- Cookie box
+- Links copied while in **Draft** will not work for the public (404) until the fundraiser is at least **Published**, **On-site**, or **Closed**.
+- **Closed** fundraisers still have working public URLs, but forms do not accept submissions.
+- Collaborators can copy and share these links the same as the owner.
 
-### Unit Label
+---
 
-Optional text describing the unit.
+## Menu Items
 
-Examples:
+In the **Items** section, click **Add item** to create a menu item (default name: `New item`).
 
-- `box`
-- `jar`
-- `plate`
+### Fields per item
 
-This may appear next to price and inventory information.
+| Field | Description |
+|-------|-------------|
+| **Name** | Label buyers see |
+| **Unit label** | Optional unit (e.g. `box`, `jar`) — shown with price and remaining stock |
+| **Description** | Optional detail text on the public form |
+| **Quantity cap** | Max total units sold; blank = unlimited |
+| **Price (CAD)** | Optional; blank items can be ordered but do not add to the total |
+| **Active on public form** | Uncheck to hide from new orders while keeping history on old orders |
+| **Item image** | Optional image beside the item on the public form |
 
-### Description
+### Stock and sold-out behavior
 
-Optional supporting text shown to buyers.
+- Remaining stock = quantity cap minus all orders already placed (across pre-order and on-site).
+- On the **pre-order** form, sold-out items stay visible but grayed out with **Sold out**.
+- On the **on-site** form, sold-out items are **hidden** entirely.
+- If stock changes while someone is ordering, submit may fail with a message to refresh and try again.
 
-Use it for:
+### Reordering items
 
-- flavor or size details
-- ingredients
-- pickup notes
+Use **Up** and **Down** on each item row. The public form follows this order.
 
-### Quantity Cap
+### Removing items
 
-If left blank, the item is unlimited.
+**Remove Menu Item** permanently deletes the item.
 
-If a number is entered, the app limits how many total units can be sold for that item.
+Prefer unchecking **Active on public form** once real orders exist, rather than deleting.
 
-This is useful when:
+---
 
-- you only have limited stock
-- you only want to accept a fixed number of preorders
+## Order Form Fields
 
-### Price (CAD)
+In **Order form fields**, click **Add field** to create a buyer input.
 
-Optional item price in Canadian dollars.
+These fields appear in the **Your details** section of the **pre-order** form only. The on-site form does **not** use custom fields (only a required **Name** field).
 
-If price is blank:
+### Fields per form field
 
-- the item can still be ordered
-- it will not contribute to the order total
+| Setting | Description |
+|---------|-------------|
+| **Label** | Text shown to buyers |
+| **Key (CSV column)** | Internal storage key; spaces become `_` on save. Used in orders spreadsheet and CSV export. |
+| **Type** | `text`, `email`, `phone`, `textarea` (Paragraph), or `select` (Dropdown) |
+| **Required** | Buyer must fill before submitting |
+| **Options** | For select fields: one option per line |
 
-If price is set:
+New fields get an auto-generated key from the label (with deduplication like `key_1` if needed).
 
-- the public form calculates order totals automatically
-- the public page shows the payment email and total amount
+### Field order
 
-### Active on Public Form
+Fields are ordered by `sort_order` at creation time. There is **no Up/Down reorder UI** for fields in the editor — only menu items can be reordered with buttons.
 
-If checked:
+### Removing fields
 
-- the item appears on the public form
+Click **Remove field** to delete a field. Avoid major changes after many orders are collected.
 
-If unchecked:
+### Service number filter
 
-- the item is hidden from new public submissions
-- old orders still keep their historical line items
+If you add a field with key `service_no`, the orders page **Service no** filter will work against that response.
 
-This is useful when an item is no longer available but you do not want to delete its order history.
+---
 
-### Item Image
+## Collaborators
 
-Optional image shown on the public form next to the item.
+The **Collaborators** section lets the **owner** invite other admins by email.
 
-### Ordering Menu Items
+### Adding a collaborator
 
-Use the `Up` and `Down` buttons to reorder items.
+1. Enter their email.
+2. Click **Add**.
 
-The public form follows this order.
+They must already have an account (have signed in at least once). Otherwise you see: *"No account with that email. They must sign up once before you can add them."*
 
-### Removing a Menu Item
+### What collaborators can do
 
-Use `Remove Menu Item` if you want to delete it entirely.
+| Action | Owner | Collaborator |
+|--------|-------|--------------|
+| Edit basics, items, fields | ✓ | ✓ |
+| View and manage orders (paid, delete) | ✓ | ✓ |
+| Copy public / on-site links | ✓ | ✓ |
+| Add or remove collaborators | ✓ | ✗ |
 
-Be careful:
+Shared fundraisers appear in the collaborator's list with **(shared)**.
 
-- deleting is stronger than deactivating
-- if you just want to stop accepting new orders for an item, it is usually safer to turn off `Active on public form`
+### Removing collaborators
 
-## Adding and Managing Custom Order Form Fields
+Only the owner can remove a collaborator from the same section.
 
-In the `Order form fields` section, click `Add field` to create fields that buyers must fill out.
+---
 
-These fields appear in the `Your details` section of the public order form.
+## Public Pre-Order Form
 
-Each field supports:
+URL: `/f/{publicId}`
 
-- label
-- internal key
-- field type
-- options for select fields
-- required or optional
-- ordering
+When open (status `published`, or `on_site`/`closed` for read-only closed view):
 
-### Common Use Cases
+**Header**
 
-Typical fields include:
+- Hero image (if set)
+- Title
+- Description
 
-- name
-- phone number
-- email
-- service number
-- pickup notes
+**Items**
 
-### Supported Field Types
+- Grid of active items with images, descriptions, prices, and remaining stock (`N {unit} 남음` or **Unlimited**)
+- +/- quantity controls
+- Sold-out items shown grayed out
 
-The app supports:
+**Your details**
 
-- `text`
-- `email`
-- `phone`
-- `textarea`
-- `select`
+- All configured form fields
 
-### Required Fields
+**Payment bar** (if any item has a price)
 
-If marked required, the buyer must fill in the field before submitting.
+- E-transfer email with Korean prompt
+- Running total in CAD
 
-### Select Fields
+**Submit**
 
-If the field type is `select`, you can define a list of allowed options.
+- Button: **Submit order**
+- Double-submit protection via an idempotency key (accidental double-click returns the same order)
 
-This is useful for:
+### Submit errors buyers may see
 
-- service numbers
-- pickup times
-- team or group names
+| Situation | Message |
+|-----------|---------|
+| Sold out / stock changed | Refresh and try again |
+| Missing required field | Fill in all required fields |
+| No items selected | Select at least one item with a quantity |
+| Other errors | Generic or server message |
 
-### Field Keys
+---
 
-Each field has an internal key used in stored order data.
+## Public On-Site Form (현장주문)
 
-Keep keys stable after you start accepting orders, especially for fields you want to filter on later.
+URL: `/f/{publicId}/onsite`
 
-For example:
+Designed for quick orders at an event. Differences from pre-order:
 
-- a field with key `service_no` can be used conveniently in the orders spreadsheet filter
+| Feature | Pre-order | On-site |
+|---------|-----------|---------|
+| Hero image | Shown | Not shown |
+| Description | Shown | Not shown |
+| Custom form fields | All configured fields | **Name only** (required) |
+| Sold-out items | Grayed out | **Hidden** |
+| E-transfer prompt in footer | Shown | Not shown (total still shown if priced) |
+| Heading | Title | Title + **현장주문** |
 
-### Reordering and Removing Fields
+Submissions are stored with the buyer's name in the `name` response field.
 
-You can reorder fields and remove them as needed.
+### When on-site is closed
 
-As with items, avoid making major structural changes after many orders have already been collected unless necessary.
+If the on-site form is not accepting orders (`closed` status, or pre-order-only closed states), a **fixed Korean/Lao message** is shown (not the admin "Message when closed" field). This message is hardcoded in the app for the on-site closed state.
 
-## Adding Collaborators
+---
 
-The `Collaborators` section lets the fundraiser owner invite other admins.
+## Order Confirmation Page
 
-### Who Can Add Collaborators
+URL: `/f/{publicId}/confirmation/{orderId}`
 
-Only the owner of the fundraiser can add or remove collaborators.
+After a successful submit, buyers are redirected here.
 
-### How to Add a Collaborator
+The page shows:
 
-Enter the collaborator's email address and click `Add`.
+1. **⚠️ 안내 ⚠️** — your **Order confirmation text** from the editor (if set)
+2. Fundraiser title and **Order Confirmation** heading
+3. Buyer name (if provided — always for on-site orders)
+4. **Total Price** (large)
+5. **Order Summary** — line items with quantities, unit labels, and line totals
 
-Important:
+There is currently no prominent order ID displayed to buyers and no "back to form" button on this page.
 
-- the person must already have an account in this app
-- if they have never logged in before, they must sign up or log in once first
-
-### What Collaborators Can Do
-
-Collaborators can:
-
-- open the fundraiser in their admin list
-- edit fundraiser settings
-- manage items
-- manage form fields
-- view and manage orders
-
-### Removing Collaborators
-
-The owner can remove collaborators at any time from the same section.
-
-## Public Order Form Experience
-
-When a fundraiser is `Published`, the public link shows:
-
-- fundraiser title
-- hero image
-- description
-- available menu items
-- custom form fields
-- calculated total
-- e-transfer email if priced items exist
-
-Buyers can:
-
-- adjust quantities for each menu item
-- fill out the form
-- submit an order
-
-After submission, they receive:
-
-- a thank-you confirmation
-- an order reference ID
-- the final total
-
-## Closing a Fundraiser
-
-When you switch a fundraiser to `Closed`:
-
-- the public page is still accessible
-- buyers can no longer submit orders
-- the closed message is shown instead of the order form
-
-This is the best option when:
-
-- ordering has ended
-- you still want people to see the page
-- you want to keep historical context available
+---
 
 ## Orders Management
 
-Open the orders page by clicking `View orders` from the fundraiser editor.
+Open from **View orders →** on the fundraiser editor.
 
-This page provides a spreadsheet-style view of submitted orders.
+### Spreadsheet view
 
-### Main Spreadsheet View
+Each row is one order. Columns include:
 
-Each row represents one order.
+- **Submitted** — timestamp (sortable)
+- **Order** — short order ID link to detail page (sortable)
+- **Paid** — checkbox (admin only; sortable)
+- **Total (CAD)** (sortable)
+- One column per form field key (sortable)
+- **Ordered items** — summary text (sortable)
+- One column per menu item quantity (sortable)
 
-The spreadsheet includes:
+Click column headers to sort ascending/descending.
 
-- submitted timestamp
-- order ID
-- paid checkbox
-- total amount
-- form field responses
-- item quantities
+### Paid tracking
 
-### Paid Tracking
+Check **Paid** in the spreadsheet or on the order detail page. Changes save immediately and persist after refresh.
 
-The `Paid` column lets admins track whether payment has been received.
-
-When you check an order as paid:
-
-- the change is saved
-- it remains checked after refresh
-- the same paid state appears on the order detail page
+The public share page shows paid status as read-only (checkmark or empty), not editable.
 
 ### Filters
 
-The orders page supports filters for:
+- **Menu item** — show only orders containing that item; narrows visible item columns too
+- **Service no** — filter by `service_no` form response (requires a field with that key)
 
-- `Menu item`
-- `Service no`
+### CSV export
 
-Menu item filtering can narrow both:
+**Download CSV** exports the **currently filtered** spreadsheet.
 
-- the visible rows
-- the visible item columns
+Columns: `submitted_at`, `order_id`, `total_cad`, all field keys, `ordered_items`, and per-item quantity columns.
 
-Service number filtering works when your form includes a field whose key is `service_no`.
+**Paid status is not included** in the CSV.
 
-### CSV Download
+The public orders page also has **Download CSV** with the same format (read-only view).
 
-The orders page includes a `Download CSV` button.
+### Shareable orders link
 
-Use it to export the current spreadsheet view.
+**Copy share link** copies `/f/{publicId}/orders`.
 
-### Shareable Orders Link
+Anyone with the link can view orders **without logging in**. They can:
 
-The admin orders page includes `Copy share link`.
+- see the spreadsheet and revenue summary
+- use filters and sorting
+- download CSV
 
-This produces a public read-only orders page that can be opened without logging in.
+They **cannot**:
 
-Use it when you need to share order visibility with people who should not have full admin access.
+- edit paid status
+- delete orders
+- change fundraiser settings
+- open admin order detail pages (order IDs are not links on the public page)
 
-### Aggregated Revenue Summary
+Only share this link with people you trust, since it exposes buyer form responses.
 
-Below the spreadsheet, the orders page also shows a summary table that includes:
+### Revenue summary
 
-- each menu item
-- quantity sold
-- revenue generated per item
-- total revenue at the bottom
+Below the spreadsheet, a table shows per-menu-item quantity sold, revenue, and a **Total** row.
+
+---
 
 ## Order Detail Page
 
-Click an order ID in the spreadsheet to open its detail page.
+Click an order ID in the admin spreadsheet.
 
-The order detail page shows:
+Shows:
 
-- order ID
-- submission time
-- total amount
-- paid status
-- full form responses
-- line items and quantities
+- order ID, submission time, total (CAD), paid status
+- all form responses
+- line items with names and quantities
 
-From the detail page you can:
+Actions:
 
-- mark the order as paid or unpaid
-- remove the order
+- toggle **Paid**
+- **Remove order** — asks for confirmation; cannot be undone
 
-## Removing an Order
+After deletion, the order disappears from the list and revenue totals.
 
-An order can be removed from the order detail page.
+---
 
-Use this carefully for situations such as:
+## Public Orders Page (Share Link)
 
-- duplicate orders
-- test submissions
-- accidental submissions
+URL: `/f/{publicId}/orders`
 
-Once removed:
+Same layout as the admin orders report but:
 
-- it disappears from the orders spreadsheet
-- it is no longer included in totals and summaries
+- read-only paid column
+- order IDs are not clickable links
+- no **Copy share link** button
+- **← Back to fundraiser** returns to the pre-order form
+
+Available when status is `published`, `on_site`, or `closed` (not `draft`).
+
+---
 
 ## Recommended Admin Workflow
 
-For a typical fundraiser, a good process is:
-
 1. Create the fundraiser.
-2. Set title, description, and e-transfer email.
-3. Upload a hero image.
-4. Add menu items with prices and quantity caps.
-5. Add buyer fields such as name, phone, and `service_no`.
-6. Review the public form using the copied public link.
-7. Change status to `Published`.
-8. Share the public link with buyers.
-9. Watch incoming orders from the orders page.
-10. Mark orders as paid as payments arrive.
-11. Use filters and summaries to track sales.
-12. Add collaborators if other admins need access.
-13. Change the fundraiser to `Closed` when ordering ends.
+2. Set title, description, e-transfer email, hero image.
+3. Add menu items (prices, caps, images) and form fields (e.g. name, phone, `service_no`).
+4. Set **Order confirmation text** if buyers need post-submit instructions.
+5. Set status to **Published**.
+6. Test the pre-order link yourself.
+7. Share **Copy public link** with buyers.
+8. Monitor **View orders**; mark **Paid** as payments arrive.
+9. On event day, set **On-site** and share **Copy 현장주문 link**.
+10. Use **Copy share link** on the orders page if others need read-only visibility.
+11. Set **Closed** when ordering ends; set **Message when closed** for visitors.
+
+---
 
 ## Tips and Best Practices
 
-- Use `Draft` while building the fundraiser.
-- Only switch to `Published` when the form is ready.
-- Use a consistent field key such as `service_no` if you want service number filtering in orders.
-- Prefer deactivating items instead of deleting them once real orders have started coming in.
-- Test the public link yourself before sharing it widely.
-- Use the shareable public orders page if leadership needs visibility without admin login access.
-- Add collaborators only after confirming they have logged into the app at least once.
+- Stay in **Draft** while building; remember public links **404** until published.
+- Test both pre-order and on-site links after changing status.
+- Use key `service_no` for service-number filtering in orders.
+- Prefer deactivating items over deleting once orders exist.
+- Confirm collaborators have logged in once before adding them.
+- Treat the public orders share link as sensitive (buyer PII in form responses).
+- Use **On-site** status to close pre-orders while keeping 현장주문 open.
+- Set **Order confirmation text** for payment or pickup instructions buyers see immediately after ordering.
+
+---
 
 ## Troubleshooting
 
-### A collaborator cannot be added
+### Collaborator cannot be added
 
-Possible reasons:
+- They have never signed in to this app
+- Email does not match their account
+- They already own the fundraiser
 
-- they have never created or accessed an account in the app
-- the email address does not match their app account
-- they already own the fundraiser
+### Public link shows "not found" (404)
 
-### Public page is not accepting orders
+- Fundraiser is still **Draft** — publish first
+- Wrong or outdated URL
 
-Check the fundraiser status:
+### Pre-order form not accepting orders
 
-- `Draft` is not for public use
-- `Closed` shows a read-only closed page
-- `Published` is the status that accepts orders
+| Status | Pre-order behavior |
+|--------|-------------------|
+| Draft | Not public (404) |
+| Published | Accepts orders |
+| On-site | Closed (shows closed message) |
+| Closed | Closed (shows closed message) |
 
-### Service number filter does not show anything
+### On-site form not accepting orders
 
-Check whether your form has a field with the key `service_no`.
+| Status | On-site behavior |
+|--------|------------------|
+| Draft | Not public (404) |
+| Published | Accepts orders |
+| On-site | Accepts orders |
+| Closed | Closed (fixed Korean message) |
 
-The orders filter relies on that stored response key.
+### Buyer sees "sold out" or stock error on submit
+
+Stock was taken by another order. Refresh the page and try again.
+
+### Service no filter is empty
+
+Add a form field with key exactly `service_no`.
 
 ### Paid checkbox does not stay checked
 
-If this happens in a hosted environment, confirm the latest database migrations have been applied.
+In hosted environments, confirm the latest database migrations are applied.
+
+### Fundraiser list will not load
+
+Check `.env.local`, run migrations, and expose the `fundraiser_app` schema in Supabase API settings (see error message on the page).
+
+---
 
 ## Summary
 
-This app is designed to support the full admin workflow for fundraiser ordering:
+This app supports the full fundraiser admin lifecycle:
 
-- build the fundraiser
-- publish the public form
+- build the fundraiser and menu
+- publish pre-order and on-site forms
 - collaborate with other admins
-- track incoming orders
-- track payments
-- close the fundraiser when ordering is complete
+- track orders, payments, and revenue
+- share read-only order reports
+- close ordering when complete
