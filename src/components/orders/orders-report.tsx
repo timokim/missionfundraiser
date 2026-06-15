@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { formatDateTime } from "@/lib/format";
 import type { OrderItemColumn, OrderRow } from "@/lib/orders/report";
 import { PaidCell } from "./paid-cell";
 
@@ -24,6 +25,13 @@ function formatCurrency(cents: number) {
     style: "currency",
     currency: "CAD",
   }).format(cents / 100);
+}
+
+function currentTotalCents(row: OrderRow, itemColumns: OrderItemColumn[]) {
+  return itemColumns.reduce((sum, item) => {
+    const quantity = Number(row.lineQty[item.id] ?? 0);
+    return sum + quantity * (item.unit_price_cents ?? 0);
+  }, 0);
 }
 
 function formatOrderedItems(
@@ -366,60 +374,90 @@ export function OrdersReport({
                 </td>
               </tr>
             ) : (
-              sortedRows.map((row) => (
-                <tr
-                  key={row.id}
-                  className="hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40"
-                >
-                  <td className="whitespace-nowrap px-3 py-2 text-zinc-600 dark:text-zinc-400">
-                    {new Date(row.created_at).toLocaleString()}
-                  </td>
-                  <td className="px-3 py-2">
-                    {orderDetailBasePath ? (
-                      <Link
-                        href={`${orderDetailBasePath}/${row.id}`}
-                        className="font-mono text-xs text-emerald-600 hover:underline dark:text-emerald-400"
+              sortedRows.map((row) => {
+                const hasCurrentPriceDiscrepancy =
+                  orderDetailBasePath &&
+                  row.total_cents != null &&
+                  currentTotalCents(row, itemColumns) !== row.total_cents;
+                const totalClassName = hasCurrentPriceDiscrepancy
+                  ? "text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                  : "text-zinc-800 dark:text-zinc-200";
+
+                return (
+                  <tr
+                    key={row.id}
+                    className="hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40"
+                  >
+                    <td className="whitespace-nowrap px-3 py-2 text-zinc-600 dark:text-zinc-400">
+                      {formatDateTime(row.created_at)}
+                    </td>
+                    <td className="px-3 py-2">
+                      {orderDetailBasePath ? (
+                        <Link
+                          href={`${orderDetailBasePath}/${row.id}`}
+                          className="font-mono text-xs text-emerald-600 hover:underline dark:text-emerald-400"
+                        >
+                          {row.id.slice(0, 8)}…
+                        </Link>
+                      ) : (
+                        <span className="font-mono text-xs text-zinc-600 dark:text-zinc-400">
+                          {row.id.slice(0, 8)}…
+                        </span>
+                      )}
+                    </td>
+                    <td className="whitespace-nowrap px-3 py-2 text-zinc-800 dark:text-zinc-200">
+                      <PaidCell
+                        fundraiserId={fundraiserId}
+                        orderId={row.id}
+                        initialPaid={row.paid}
+                        editable={Boolean(editablePaid)}
+                      />
+                    </td>
+                    <td className="whitespace-nowrap px-3 py-2 font-medium tabular-nums">
+                      {row.total_cents != null ? (
+                        orderDetailBasePath ? (
+                          <Link
+                            href={`${orderDetailBasePath}/${row.id}`}
+                            className={`${totalClassName} hover:underline`}
+                            title={
+                              hasCurrentPriceDiscrepancy
+                                ? "Order total differs from current menu prices"
+                                : undefined
+                            }
+                          >
+                            ${formatTotal(row.total_cents)}
+                          </Link>
+                        ) : (
+                          <span className={totalClassName}>
+                            ${formatTotal(row.total_cents)}
+                          </span>
+                        )
+                      ) : (
+                        "—"
+                      )}
+                    </td>
+                    {fieldKeys.map((key) => (
+                      <td
+                        key={key}
+                        className="max-w-[200px] truncate px-3 py-2 text-zinc-800 dark:text-zinc-200"
                       >
-                        {row.id.slice(0, 8)}…
-                      </Link>
-                    ) : (
-                      <span className="font-mono text-xs text-zinc-600 dark:text-zinc-400">
-                        {row.id.slice(0, 8)}…
-                      </span>
-                    )}
-                  </td>
-                  <td className="whitespace-nowrap px-3 py-2 text-zinc-800 dark:text-zinc-200">
-                    <PaidCell
-                      fundraiserId={fundraiserId}
-                      orderId={row.id}
-                      initialPaid={row.paid}
-                      editable={Boolean(editablePaid)}
-                    />
-                  </td>
-                  <td className="whitespace-nowrap px-3 py-2 font-medium tabular-nums text-zinc-800 dark:text-zinc-200">
-                    {row.total_cents != null ? `$${formatTotal(row.total_cents)}` : "—"}
-                  </td>
-                  {fieldKeys.map((key) => (
-                    <td
-                      key={key}
-                      className="max-w-[200px] truncate px-3 py-2 text-zinc-800 dark:text-zinc-200"
-                    >
-                      {row.responses[key] ?? ""}
+                        {row.responses[key] ?? ""}
+                      </td>
+                    ))}
+                    <td className="whitespace-nowrap px-3 py-2 text-zinc-800 dark:text-zinc-200">
+                      {formatOrderedItems(row, itemColumns)}
                     </td>
-                  ))}
-                  <td className="whitespace-nowrap px-3 py-2 text-zinc-800 dark:text-zinc-200">
-                    {formatOrderedItems(row, itemColumns)}
-                  </td>
-                  {visibleItemColumns.map((item) => (
-                    <td
-                      key={item.id}
-                      className="whitespace-nowrap px-3 py-2 text-zinc-800 dark:text-zinc-200"
-                    >
-                      {row.lineQty[item.id] ?? ""}
-                    </td>
-                  ))}
-                </tr>
-              ))
+                    {visibleItemColumns.map((item) => (
+                      <td
+                        key={item.id}
+                        className="whitespace-nowrap px-3 py-2 text-zinc-800 dark:text-zinc-200"
+                      >
+                        {row.lineQty[item.id] ?? ""}
+                      </td>
+                    ))}
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>
